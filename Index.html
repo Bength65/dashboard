@@ -1,83 +1,10 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Crypto Dashboard</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #1e1e2f, #2a2a40);
-      color: #fff;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-      background: #2a2a40;
-    }
-    nav a {
-      margin: 0 10px;
-      text-decoration: none;
-      color: #fff;
-    }
-    nav a:hover { color: #ffd700; }
-
-    main { padding: 20px; }
-
-    .overview {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-    .balance-card {
-      background: #222;
-      color: #ffd700;
-      padding: 20px;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    }
-    .performance {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 10px;
-    }
-    .crypto-cards {
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-    .crypto-card {
-      background: #333;
-      padding: 15px;
-      border-radius: 10px;
-      flex: 1;
-      text-align: center;
-      min-width: 150px;
-    }
-
-    .portfolio {
-      background: #2a2a40;
-      padding: 20px;
-      border-radius: 12px;
-      margin-bottom: 30px;
-    }
-    .portfolio ul {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 20px 0;
-    }
-    .portfolio li { margin: 5px 0; }
-
-    .chart, #portfolioLine, #portfolioPie {
-      width: 100%;
-      height: 500px;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
@@ -85,16 +12,16 @@
     <nav>
       <a href="#overview">Overview</a>
       <a href="#portfolio">Portfolio</a>
-      <a href="#chart">Chart</a>
+      <a href="#charts">Charts</a>
     </nav>
   </header>
 
   <main>
     <!-- Översikt -->
-    <section id="overview" class="overview">
+    <section class="overview">
       <div class="balance-card">
         <h2>Total Balance</h2>
-        <p id="totalBalance">$154,610.00</p>
+        <p>$154,610.00</p>
         <div class="performance">
           <span class="today">Today: -2.5%</span>
           <span class="week">Last 7 days: +4.2%</span>
@@ -110,111 +37,116 @@
     </section>
 
     <!-- Portföljfördelning -->
-    <section id="portfolio" class="portfolio">
-      <h2>My Portfolio</h2>
-      <ul>
-        <li>Bitcoin – 32%</li>
-        <li>Tether – 20%</li>
-        <li>Ripple – 18%</li>
-        <li>Doge – 15%</li>
-        <li>Ethereum – 15%</li>
-      </ul>
-      <div id="portfolioPie"></div>
+    <section class="portfolio">
+      <div>
+        <h2>My Portfolio</h2>
+        <ul>
+          <li>Bitcoin – 32%</li>
+          <li>Tether – 20%</li>
+          <li>Ripple – 18%</li>
+          <li>Doge – 15%</li>
+          <li>Ethereum – 15%</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Portfolio split</h3>
+        <div class="pie-chart"></div>
+      </div>
     </section>
 
-    <!-- Candlestick + indikatorer -->
-    <section id="chart" class="wallet">
-      <h2>BTC/USDT Chart</h2>
-      <div class="chart"></div>
-    </section>
-
-    <!-- Portföljvärde över tid -->
-    <section class="portfolio-chart">
-      <h2>Portfolio Value</h2>
-      <div id="portfolioLine"></div>
+    <!-- Charts -->
+    <section class="charts">
+      <div class="panel">
+        <h3>BTC/USDT Live Chart</h3>
+        <div class="chart"></div>
+        <div class="info-cards">
+          <div class="card current">
+            <h3>Aktuellt pris</h3>
+            <p class="value">–</p>
+          </div>
+          <div class="card high">
+            <h3>24h High</h3>
+            <p class="value">–</p>
+          </div>
+          <div class="card low">
+            <h3>24h Low</h3>
+            <p class="value">–</p>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Portfolio value over time</h3>
+        <div class="line-chart"></div>
+      </div>
     </section>
   </main>
 
+  <!-- JS -->
   <script>
-    // --- EMA-funktion ---
-    function ema(values, period) {
-      let k = 2 / (period + 1);
-      let emaArray = [];
-      let prevEma;
-      for (let i = 0; i < values.length; i++) {
-        if (i === 0) {
-          emaArray.push(values[i]);
-          prevEma = values[i];
-        } else {
-          let emaVal = values[i] * k + prevEma * (1 - k);
-          emaArray.push(emaVal);
-          prevEma = emaVal;
-        }
-      }
-      return emaArray;
+    // Hämtar live-data för BTC/USDT
+    async function updateLabels() {
+      const res = await fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT");
+      const data = await res.json();
+
+      const current = parseFloat(data.lastPrice).toFixed(2);
+      const high24h = parseFloat(data.highPrice).toFixed(2);
+      const low24h  = parseFloat(data.lowPrice).toFixed(2);
+
+      document.querySelector('.card.current .value').textContent = `$${current}`;
+      document.querySelector('.card.high .value').textContent    = `$${high24h}`;
+      document.querySelector('.card.low .value').textContent     = `$${low24h}`;
     }
 
-    // --- ATR för Gaussian Channel ---
-    function atr(highs, lows, closes, period = 14) {
-      let trs = [];
-      for (let i = 1; i < highs.length; i++) {
-        const tr = Math.max(
-          highs[i] - lows[i],
-          Math.abs(highs[i] - closes[i - 1]),
-          Math.abs(lows[i] - closes[i - 1])
-        );
-        trs.push(tr);
-      }
-      return ema(trs, period);
-    }
+    // Uppdatera direkt och sedan var 10:e sekund
+    updateLabels();
+    setInterval(updateLabels, 10000);
 
-    // --- Gaussian Channel (approx) ---
-    function gaussianChannel(closes, highs, lows, period = 20, mult = 1.414) {
-      const mid = ema(closes, period);
-      const atrVals = atr(highs, lows, closes, period);
-      let upper = [], lower = [];
-      for (let i = 0; i < closes.length; i++) {
-        if (!atrVals[i]) { upper.push(null); lower.push(null); }
-        else {
-          upper.push(mid[i] + atrVals[i] * mult);
-          lower.push(mid[i] - atrVals[i] * mult);
-        }
-      }
-      return {mid, upper, lower};
-    }
+    // Enkel demo för pie och line charts
+    Plotly.newPlot(document.querySelector('.pie-chart'), [{
+      values: [32, 20, 18, 15, 15],
+      labels: ['Bitcoin','Tether','Ripple','Doge','Ethereum'],
+      type: 'pie',
+      textinfo: 'label+percent'
+    }], { paper_bgcolor: 'transparent', font: { color: '#fff' } });
 
-    async function fetchData(interval = "1m") {
-      const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=500`);
+    Plotly.newPlot(document.querySelector('.line-chart'), [{
+      x: ['2025-11-01','2025-11-02','2025-11-03','2025-11-04'],
+      y: [35000, 36000, 37000, 38252],
+      type: 'scatter',
+      mode: 'lines+markers',
+      line: { color: '#ffd700' }
+    }], { paper_bgcolor: 'transparent', plot_bgcolor: '#1e1e2f', font: { color: '#fff' } });
+
+    // Din candlestick chart
+    async function fetchBTC(interval = "1m") {
+      const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=200`);
       const raw = await res.json();
-      const dates = raw.map(c => new Date(c[0]));
-      const opens = raw.map(c => parseFloat(c[1]));
-      const highs = raw.map(c => parseFloat(c[2]));
-      const lows = raw.map(c => parseFloat(c[3]));
-      const closes = raw.map(c => parseFloat(c[4]));
+      const x = raw.map(c => new Date(c[0]));
+      const open = raw.map(c => +c[1]);
+      const high = raw.map(c => +c[2]);
+      const low  = raw.map(c => +c[3]);
+      const close= raw.map(c => +c[4]);
 
-      // Candlestick
-      const candleTrace = {
-        x: dates, open: opens, high: highs, low: lows, close: closes,
-        type: 'candlestick', name: 'BTC/USDT'
-      };
-
-      // 3 EMA
-      const ema50 = ema(closes, 50);
-      const ema100 = ema(closes, 100);
-      const ema200 = ema(closes, 200);
-
-      const emaTrace50 = { x: dates, y: ema50, type: 'scatter', mode: 'lines', line: {color: 'yellow'}, name: 'EMA 50' };
-      const emaTrace100 = { x: dates, y: ema100, type: 'scatter', mode: 'lines', line: {color: 'blue'}, name: 'EMA 100' };
-      const emaTrace200 = { x: dates, y: ema200, type: 'scatter', mode: 'lines', line: {color: 'magenta'}, name: 'EMA 200' };
-
-      // Gaussian Channel
-      const gaus = gaussianChannel(closes, highs, lows, 20, 1.414);
-      const gausMid = { x: dates, y: gaus.mid, type: 'scatter', mode: 'lines', line: {color: 'lime', width: 2}, name: 'Gaussian Mid' };
-      const gausUpper = { x: dates, y: gaus.upper, type: 'scatter', mode: 'lines', line: {color: 'red', dash: 'dot'}, name: 'Gaussian Upper' };
-      const gausLower = { x: dates, y: gaus.lower, type: 'scatter', mode: 'lines', line: {color: 'green', dash: 'dot'}, name: 'Gaussian Lower', fill: 'tonexty' };
-
-      return [candleTrace, emaTrace50, emaTrace100, emaTrace200, gausMid, gausUpper, gausLower];
+      const candle = { x, open, high, low, close, type: 'candlestick', name: 'BTC/USDT' };
+      return [candle];
     }
 
-    async function render() {
-      const data =
+    async function renderBTC() {
+      const data = await fetchBTC('1m');
+      Plotly.newPlot(document.querySelector('.chart'), data, {
+        paper_bgcolor: 'transparent',
+        plot_bgcolor: '#1e1e2f',
+        font: { color: '#fff' },
+        xaxis: { showgrid: true, gridcolor: '#555' },
+        yaxis: { showgrid: true, gridcolor: '#555', autorange: true }
+      });
+    }
+
+    renderBTC();
+    setInterval(async () => {
+      const data = await fetchBTC('1m');
+      Plotly.update(document.querySelector('.chart'), data);
+    }, 10000);
+  </script>
+</body>
+</html>

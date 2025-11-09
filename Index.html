@@ -1,75 +1,153 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="sv">
+
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Förnamn Efternamn — Portfolio</title>
-  <meta name="description" content="Kort beskrivning av dig och vad du gör">
+  <meta charset="UTF-8">
+  <title>Crypto Dashboard</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body style="margin:0;
-             background-image:url('bilder/bak.jpg');
-             background-size:cover;
-             background-position:center;
-             background-repeat:no-repeat;
-             background-color:#071126;">
+
+<body>
   <header>
+    <div class="logo">💰 MyWallet</div>
     <nav>
-      <a href="#home">Hem</a>
-      <a href="#projects">Projekt</a>
-      <a href="#about">Om mig</a>
-      <a href="#contact">Kontakt</a>
+      <a href="#wallet">Wallet</a>
+      <a href="#transactions">Transactions</a>
+      <a href="#create">Create</a>
     </nav>
   </header>
 
   <main>
-    <section id="home">
-      <h1>Hej, mitt namn är Bengt</h1>
-      <section id="home" class="hero">
-  <img src="bilder/bengt.jpg" alt="Porträtt av Bengt Hafström" class="avatar">
-  <div class="hero-text">
-    
-    <p>Jag utbildar mig till Blockchainutvecklare</p>
-  </div>
-</section>
-      <p>Här kommer jag att presentera mina projekt och skolarbeten</p>
+    <section id="wallet">
+      <h2>Wallet</h2>
+      <div class="chart-area">
+        <div class="chart"></div>
+        <div class="info-cards">
+          <div class="card current">Aktuellt pris<br><span id="currentPrice">laddar...</span></div>
+          <div class="card high">24h High<br><span id="highPrice">laddar...</span></div>
+          <div class="card low">24h Low<br><span id="lowPrice">laddar...</span></div>
+        </div>
+      </div>
     </section>
 
-    <section id="projects">
-      <h2>Utvalda projekt</h2>
-      <article class="project">
-        <h3>Projekt 1</h3>
-        <p>Kort beskrivning av projektet och din roll.</p>
-        <a href="#">Demo</a> · <a href="#">Kod</a>
-      </article>
+    <section id="transactions">
+      <h2>Transactions</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>From</th>
+            <th>To</th>
+            <th>Amount</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Alice</td>
+            <td>Bengt</td>
+            <td>0.1234 BTC</td>
+            <td>2025-11-09 10:00</td>
+          </tr>
+          <tr>
+            <td>Bengt</td>
+            <td>Charlie</td>
+            <td>0.5000 BTC</td>
+            <td>2025-11-08 14:30</td>
+          </tr>
+          <tr>
+            <td>David</td>
+            <td>Bengt</td>
+            <td>1.0000 BTC</td>
+            <td>2025-11-07 09:15</td>
+          </tr>
+        </tbody>
+      </table>
     </section>
 
-    <section id="about">
-      <h2>Om mig</h2>
-      <p>Bakgrund och kompetenser.</p>
-    </section>
-
-    <section id="contact">
-      <h2>Kontakt</h2>
-      <form action="#" method="post">
-        <label for="name">Namn</label>
-        <input id="name" name="name" type="text" required>
-
-        <label for="email">E-post</label>
-        <input id="email" name="email" type="email" required>
-
-        <button type="submit">Skicka</button>
+    <section id="create">
+      <h2>Create Transaction</h2>
+      <form>
+        <label>Recipient
+          <input type="text" name="recipient">
+        </label>
+        <label>Amount
+          <input type="number" step="0.0001" name="amount">
+        </label>
+        <label>Message
+          <textarea name="message"></textarea>
+        </label>
+        <div class="form-buttons">
+          <button type="submit">Send</button>
+          <button type="reset">Clear</button>
+        </div>
       </form>
-      <p><a href="https://github.com/Bength65">GitHub</a> · <a href="https://www.linkedin.com/in/dittkonto">LinkedIn</a></p>
     </section>
   </main>
 
   <footer>
-    <p>© <span id="year">2025</span> Bengt Hafström</p>
+    <p>© 2025 MyWallet Project</p>
   </footer>
 
   <script>
-    // En liten bit JS som du kan ignorera tills vidare
-    document.getElementById('year').textContent = new Date().getFullYear();
+    let currentInterval = "1m";
+    let updateTimer = null;
+
+    const layout = {
+      title: 'BTC/USDT – Live candlesticks',
+      paper_bgcolor: 'transparent',
+      plot_bgcolor: '#1e1e2f',
+      font: { color: '#fff' },
+      xaxis: { title: 'Tid', showgrid: true, gridcolor: '#555' },
+      yaxis: {
+        title: 'Pris (USD)',
+        side: 'right',
+        showgrid: true,
+        gridcolor: '#555',
+        autorange: true,   // responsiv autoscale
+        dtick: 100
+      }
+    };
+
+    async function fetchData(interval = "1m") {
+      const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=1440`);
+      const raw = await res.json();
+      const closes = raw.map(c => parseFloat(c[4]));
+      const latestPrice = closes[closes.length - 1];
+      const high24h = Math.max(...closes);
+      const low24h = Math.min(...closes);
+
+      document.getElementById('currentPrice').textContent = latestPrice.toFixed(4) + " USD";
+      document.getElementById('highPrice').textContent = high24h.toFixed(4) + " USD";
+      document.getElementById('lowPrice').textContent = low24h.toFixed(4) + " USD";
+
+      return [{
+        x: raw.map(c => new Date(c[0])),
+        open: raw.map(c => parseFloat(c[1])),
+        high: raw.map(c => parseFloat(c[2])),
+        low: raw.map(c => parseFloat(c[3])),
+        close: closes,
+        type: 'candlestick',
+        name: `BTC/USDT (${interval})`
+      }];
+    }
+
+    async function renderFirstTime(interval = currentInterval) {
+      const data = await fetchData(interval);
+      Plotly.newPlot(document.querySelector('.chart'), data, layout, { responsive: true });
+    }
+
+    async function updateData(interval = currentInterval) {
+      const data = await fetchData(interval);
+      Plotly.update(document.querySelector('.chart'), data);
+    }
+
+    // Init
+    (async () => {
+      await renderFirstTime("1m");
+      updateTimer = setInterval(() => updateData(currentInterval), 10000);
+    })();
   </script>
 </body>
+
 </html>

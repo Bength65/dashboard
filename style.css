@@ -1,0 +1,149 @@
+body {
+    margin: 0;
+    padding: 30px;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+    color: #fff;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: #2a2a40;
+    position: sticky;
+    top: 0;
+}
+
+nav a {
+    margin: 0 10px;
+    text-decoration: none;
+    color: #fff;
+}
+
+nav a:hover {
+    color: #00bfff;
+}
+
+.chart-area {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.chart {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    height: 600px;
+}
+
+.info-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-left: 20px;
+}
+
+.card {
+    background: #0078d4;
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    min-width: 200px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.card.high {
+    background: #28a745;
+}
+
+.card.low {
+    background: #dc3545;
+}
+
+.card.current {
+    background: #0078d4;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+thead {
+    background: #0078d4;
+    color: #fff;
+}
+
+tbody tr:nth-child(even) {
+    background: #333;
+}
+
+tbody tr:hover {
+    background: #444;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+form label {
+    display: flex;
+    flex-direction: column;
+    font-weight: bold;
+}
+
+input,
+textarea,
+button {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+input:focus,
+textarea:focus,
+button:focus {
+    outline: 2px solid #00bfff;
+}
+
+.form-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+@media (max-width: 900px) {
+    .chart-area {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .info-cards {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 15px 0 0 0;
+    }
+
+    .card {
+        min-width: 150px;
+    }
+
+    .chart {
+        width: 100%;
+        height: 100%;
+    }
+}

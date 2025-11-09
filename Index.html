@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Crypto Dashboard</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <link rel="stylesheet" href="style.css">
@@ -10,36 +10,17 @@
   <header>
     <div class="logo">💰 MyWallet</div>
     <nav>
-      <a href="#overview">Overview</a>
       <a href="#portfolio">Portfolio</a>
+      <a href="#prices">Prices</a>
       <a href="#charts">Charts</a>
     </nav>
   </header>
 
   <main>
-    <!-- Översikt -->
-    <section class="overview">
-      <div class="balance-card">
-        <h2>Total Balance</h2>
-        <p>$154,610.00</p>
-        <div class="performance">
-          <span class="today">Today: -2.5%</span>
-          <span class="week">Last 7 days: +4.2%</span>
-        </div>
-      </div>
-
-      <div class="crypto-cards">
-        <div class="crypto-card">Bitcoin <span>$52,291</span></div>
-        <div class="crypto-card">Ethereum <span>$14,291</span></div>
-        <div class="crypto-card">Solana <span>$14,291</span></div>
-        <div class="crypto-card">Litecoin <span>$8,291</span></div>
-      </div>
-    </section>
-
-    <!-- Portföljfördelning -->
-    <section class="portfolio">
-      <div>
-        <h2>My Portfolio</h2>
+    <!-- My Portfolio -->
+    <section class="portfolio" id="portfolio">
+      <h2>My Portfolio</h2>
+      <div class="portfolio-content">
         <ul>
           <li>Bitcoin – 32%</li>
           <li>Tether – 20%</li>
@@ -47,32 +28,46 @@
           <li>Doge – 15%</li>
           <li>Ethereum – 15%</li>
         </ul>
-      </div>
-      <div class="panel">
-        <h3>Portfolio split</h3>
         <div class="pie-chart"></div>
       </div>
     </section>
 
+    <!-- Live Prices -->
+    <section class="prices" id="prices">
+      <h2>Live Prices</h2>
+      <div class="price-cards">
+        <div class="card btc">
+          <h3>Bitcoin (BTC)</h3>
+          <p class="current">Aktuellt pris: –</p>
+          <p class="high">24h High: –</p>
+          <p class="low">24h Low: –</p>
+        </div>
+        <div class="card eth">
+          <h3>Ethereum (ETH)</h3>
+          <p class="current">Aktuellt pris: –</p>
+          <p class="high">24h High: –</p>
+          <p class="low">24h Low: –</p>
+        </div>
+        <div class="card sol">
+          <h3>Solana (SOL)</h3>
+          <p class="current">Aktuellt pris: –</p>
+          <p class="high">24h High: –</p>
+          <p class="low">24h Low: –</p>
+        </div>
+        <div class="card ltc">
+          <h3>Litecoin (LTC)</h3>
+          <p class="current">Aktuellt pris: –</p>
+          <p class="high">24h High: –</p>
+          <p class="low">24h Low: –</p>
+        </div>
+      </div>
+    </section>
+
     <!-- Charts -->
-    <section class="charts">
+    <section class="charts" id="charts">
       <div class="panel">
         <h3>BTC/USDT Live Chart</h3>
         <div class="chart"></div>
-        <div class="info-cards">
-          <div class="card current">
-            <h3>Aktuellt pris</h3>
-            <p class="value">–</p>
-          </div>
-          <div class="card high">
-            <h3>24h High</h3>
-            <p class="value">–</p>
-          </div>
-          <div class="card low">
-            <h3>24h Low</h3>
-            <p class="value">–</p>
-          </div>
-        </div>
       </div>
       <div class="panel">
         <h3>Portfolio value over time</h3>
@@ -81,27 +76,29 @@
     </section>
   </main>
 
-  <!-- JS -->
   <script>
-    // Hämtar live-data för BTC/USDT
-    async function updateLabels() {
-      const res = await fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT");
-      const data = await res.json();
+    // Live prices för fyra coins
+    const coins = [
+      { symbol: "BTCUSDT", selector: ".card.btc" },
+      { symbol: "ETHUSDT", selector: ".card.eth" },
+      { symbol: "SOLUSDT", selector: ".card.sol" },
+      { symbol: "LTCUSDT", selector: ".card.ltc" }
+    ];
 
-      const current = parseFloat(data.lastPrice).toFixed(2);
-      const high24h = parseFloat(data.highPrice).toFixed(2);
-      const low24h  = parseFloat(data.lowPrice).toFixed(2);
-
-      document.querySelector('.card.current .value').textContent = `$${current}`;
-      document.querySelector('.card.high .value').textContent    = `$${high24h}`;
-      document.querySelector('.card.low .value').textContent     = `$${low24h}`;
+    async function updatePrices() {
+      for (const coin of coins) {
+        const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${coin.symbol}`);
+        const data = await res.json();
+        const card = document.querySelector(coin.selector);
+        card.querySelector(".current").textContent = `Aktuellt pris: $${parseFloat(data.lastPrice).toFixed(2)}`;
+        card.querySelector(".high").textContent    = `24h High: $${parseFloat(data.highPrice).toFixed(2)}`;
+        card.querySelector(".low").textContent     = `24h Low: $${parseFloat(data.lowPrice).toFixed(2)}`;
+      }
     }
+    updatePrices();
+    setInterval(updatePrices, 10000);
 
-    // Uppdatera direkt och sedan var 10:e sekund
-    updateLabels();
-    setInterval(updateLabels, 10000);
-
-    // Enkel demo för pie och line charts
+    // Portfolio pie
     Plotly.newPlot(document.querySelector('.pie-chart'), [{
       values: [32, 20, 18, 15, 15],
       labels: ['Bitcoin','Tether','Ripple','Doge','Ethereum'],
@@ -109,44 +106,59 @@
       textinfo: 'label+percent'
     }], { paper_bgcolor: 'transparent', font: { color: '#fff' } });
 
+    // Portfolio line
     Plotly.newPlot(document.querySelector('.line-chart'), [{
-      x: ['2025-11-01','2025-11-02','2025-11-03','2025-11-04'],
-      y: [35000, 36000, 37000, 38252],
-      type: 'scatter',
-      mode: 'lines+markers',
-      line: { color: '#ffd700' }
-    }], { paper_bgcolor: 'transparent', plot_bgcolor: '#1e1e2f', font: { color: '#fff' } });
+       x: ['2025-11-01','2025-11-02','2025-11-03','2025-11-04'],
+       y: [35000, 36000, 37000, 38252],
+       type: 'scatter',
+       mode: 'lines+markers',
+       line: { color: '#ffd700' }
+    }], 
+    { paper_bgcolor: 'transparent', plot_bgcolor: '#1e1e2f', font: { color: '#fff' } },
+    { responsive: true }
+    );
 
-    // Din candlestick chart
+    // BTC candlestick chart
     async function fetchBTC(interval = "1m") {
       const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=200`);
       const raw = await res.json();
-      const x = raw.map(c => new Date(c[0]));
-      const open = raw.map(c => +c[1]);
-      const high = raw.map(c => +c[2]);
-      const low  = raw.map(c => +c[3]);
-      const close= raw.map(c => +c[4]);
-
-      const candle = { x, open, high, low, close, type: 'candlestick', name: 'BTC/USDT' };
-      return [candle];
+      return [{
+        x: raw.map(c => new Date(c[0])),
+        open: raw.map(c => +c[1]),
+        high: raw.map(c => +c[2]),
+        low: raw.map(c => +c[3]),
+        close: raw.map(c => +c[4]),
+        type: 'candlestick',
+        name: 'BTC/USDT'
+      }];
     }
 
     async function renderBTC() {
       const data = await fetchBTC('1m');
       Plotly.newPlot(document.querySelector('.chart'), data, {
+        autosize: true,
+        margin: { l: 60, r: 60, t: 40, b: 40 },
         paper_bgcolor: 'transparent',
         plot_bgcolor: '#1e1e2f',
         font: { color: '#fff' },
         xaxis: { showgrid: true, gridcolor: '#555' },
-        yaxis: { showgrid: true, gridcolor: '#555', autorange: true }
+        yaxis: {
+          showgrid: true,
+          gridcolor: '#555',
+          autorange: true,
+          side: 'right',
+          dtick: 100
+        }
       });
     }
-
     renderBTC();
     setInterval(async () => {
       const data = await fetchBTC('1m');
       Plotly.update(document.querySelector('.chart'), data);
     }, 10000);
   </script>
+      <footer>
+        <p class="footertext">© 2025 Bengt Hafström</p>
+    </footer>
 </body>
 </html>

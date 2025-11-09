@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Förnamn Efternamn — Portfolio</title>
+  <meta name="description" content="Kort beskrivning av dig och vad du gör">
+</head>
+<body style="margin:0;
+             background-image:url('bilder/bak.jpg');
+             background-size:cover;
+             background-position:center;
+             background-repeat:no-repeat;
+             background-color:#071126;">
+  <header>
+    <nav>
+      <a href="#home">Hem</a>
+      <a href="#projects">Projekt</a>
+      <a href="#about">Om mig</a>
+      <a href="#contact">Kontakt</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="home">
+      <h1>Hej, mitt namn är Bengt</h1>
+      <section id="home" class="hero">
+  <img src="bilder/bengt.jpg" alt="Porträtt av Bengt Hafström" class="avatar">
+  <div class="hero-text">
+    
+    <p>Jag utbildar mig till Blockchainutvecklare</p>
+  </div>
+</section>
+      <p>Här kommer jag att presentera mina projekt och skolarbeten</p>
+    </section>
+
+    <section id="projects">
+      <h2>Utvalda projekt</h2>
+      <article class="project">
+        <h3>Projekt 1</h3>
+        <p>Kort beskrivning av projektet och din roll.</p>
+        <a href="#">Demo</a> · <a href="#">Kod</a>
+      </article>
+    </section>
+
+    <section id="about">
+      <h2>Om mig</h2>
+      <p>Bakgrund och kompetenser.</p>
+    </section>
+
+    <section id="contact">
+      <h2>Kontakt</h2>
+      <form action="#" method="post">
+        <label for="name">Namn</label>
+        <input id="name" name="name" type="text" required>
+
+        <label for="email">E-post</label>
+        <input id="email" name="email" type="email" required>
+
+        <button type="submit">Skicka</button>
+      </form>
+      <p><a href="https://github.com/Bength65">GitHub</a> · <a href="https://www.linkedin.com/in/dittkonto">LinkedIn</a></p>
+    </section>
+  </main>
+
+  <footer>
+    <p>© <span id="year">2025</span> Bengt Hafström</p>
+  </footer>
+
+  <script>
+    // En liten bit JS som du kan ignorera tills vidare
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

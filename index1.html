@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bengt Crypto Dashboard</title>
+  <link rel="stylesheet" href="style1.css" />
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="#" aria-label="Startsida">
+      <span>Bengt Wallet</span>
+    </a>
+    <nav class="nav">
+      <a href="#" data-target=".wallet-section">Wallet</a>
+      <a href="#" data-target=".transactions-section">Transactions</a>
+      <a href="#" data-target=".create-section">Create transaction</a>
+    </nav>
+    <button class="btn theme-toggle">Dark mode</button>
+  </header>
+
+  <main>
+    <!-- Wallet -->
+    <section class="panel wallet-section">
+      <h2>Wallet</h2>
+      <div class="cards">
+        <article class="card">
+          <h3>Bitcoin (BTC)</h3>
+          <img src="btc.svg" alt="Bitcoin logo" class="coin" />
+          <p class="hi">High: …</p>
+          <p class="low">Low: …</p>
+        </article>
+        <article class="card">
+          <h3>Ethereum (ETH)</h3>
+          <img src="eth.svg" alt="Ethereum logo" class="coin" />
+          <p class="hi">High: …</p>
+          <p class="low">Low: …</p>
+        </article>
+        <article class="card">
+          <h3>Solana (SOL)</h3>
+          <img src="sol.svg" alt="Solana logo" class="coin" />
+          <p class="hi">High: …</p>
+          <p class="low">Low: …</p>
+        </article>
+        <article class="card">
+          <h3>Litecoin (LTC)</h3>
+          <img src="ltc.svg" alt="Litecoin logo" class="coin" />
+          <p class="hi">High: …</p>
+          <p class="low">Low: …</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Candlestick chart -->
+    <section class="panel chart-section">
+      <h2>BTC/USDT Candlestick (Binance)</h2>
+      <div class="chart"></div>
+    </section>
+
+    <!-- Transactions -->
+    <section class="panel transactions-section">
+      <h2>Transactions</h2>
+      <table>
+        <thead>
+          <tr><th>Från</th><th>Till</th><th>Belopp</th><th>Tid</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0xA1…F3</td><td>0x77…9C</td><td>0.05 BTC</td><td>2025‑11‑13 09:12</td></tr>
+          <tr><td>0x22…B8</td><td>0x99…EE</td><td>1.20 ETH</td><td>2025‑11‑12 17:40</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Create transaction -->
+    <section class="panel create-section">
+      <h2>Create transaction</h2>
+      <form class="tx-form">
+        <label for="asset">Tillgång</label>
+        <select id="asset" required>
+          <option value="">Välj</option>
+          <option>BTC</option><option>ETH</option><option>SOL</option><option>LTC</option>
+        </select>
+
+        <label for="address">Mottagaradress</label>
+        <input id="address" type="text" placeholder="0x…" required />
+
+        <label for="amount">Belopp</label>
+        <input id="amount" type="number" step="0.0001" min="0" required />
+
+        <div class="actions">
+          <button type="submit" class="btn primary">Skicka</button>
+          <button type="reset" class="btn">Rensa</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <small>© 2025 Bengt Hafström</small>
+  </footer>
+
+  <script>
+    // Navigation scroll utan id
+    document.querySelectorAll(".nav a").forEach(link => {
+      link.addEventListener("click", e => {
+        e.preventDefault();
+        const target = document.querySelector(link.dataset.target);
+        target.scrollIntoView({behavior:"smooth"});
+      });
+    });
+
+    // Dark mode toggle
+    const toggle = document.querySelector(".theme-toggle");
+    toggle.addEventListener("click", () => {
+      const current = document.documentElement.dataset.theme;
+      const next = current === "dark" ? "light" : "dark";
+      document.documentElement.dataset.theme = next;
+    });
+    document.documentElement.dataset.theme = "light";
+
+    // Wallet live data från Binance
+    async function updateWallet() {
+      const coins = [
+        { symbol: "BTCUSDT", selector: ".card:nth-child(1)" },
+        { symbol: "ETHUSDT", selector: ".card:nth-child(2)" },
+        { symbol: "SOLUSDT", selector: ".card:nth-child(3)" },
+        { symbol: "LTCUSDT", selector: ".card:nth-child(4)" }
+      ];
+      for (const coin of coins) {
+        const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${coin.symbol}`);
+        const d = await res.json();
+        const card = document.querySelector(coin.selector);
+        card.querySelector(".hi").textContent = "High: $" + d.highPrice;
+        card.querySelector(".low").textContent = "Low: $" + d.lowPrice;
+      }
+    }
+    updateWallet();
+    setInterval(updateWallet, 10000);
+
+    // Candlestick chart från Binance
+    async function drawChart() {
+      const res = await fetch("https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=30");
+      const raw = await res.json();
+      const trace = {
+        x: raw.map(d => new Date(d[0])),
+        open: raw.map(d => parseFloat(d[1])),
+        high: raw.map(d => parseFloat(d[2])),
+        low: raw.map(d => parseFloat(d[3])),
+        close: raw.map(d => parseFloat(d[4])),
+        type: 'candlestick',
+        increasing: {line: {color: 'green'}},
+        decreasing: {line: {color: 'red'}}
+      };
+      const latestPrice = parseFloat(raw[raw.length - 1][4]).toFixed(2);
+      const layout = {
+        xaxis: {rangeslider: {visible: false}},
+        yaxis: {side: "right", dtick: 100, title: "USD"},
+        margin: {l: 40, r: 100, t: 40, b: 40},
+        annotations: [
+          {
+            xref: "paper", yref: "paper",
+            x: 1.05, y: 1,
+            text: `Current Price: $${latestPrice}`,
+            showarrow: false,
+            font: {size: 14, color: "black"},
+            align: "left"
+          }
+        ]
+      };
+      Plotly.react(document.querySelector(".chart"), [trace], layout);
+    }
+    drawChart();
+    setInterval(drawChart, 10000);
+  </script>
+</body>
+</html>
